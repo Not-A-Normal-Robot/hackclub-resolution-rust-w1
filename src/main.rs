@@ -15,8 +15,9 @@ fn get_story_info_url(id: u64) -> String {
 struct Story {
     title: String,
     url: Option<String>,
-    score: u32,
+    score: u64,
     by: String,
+    descendants: u64,
 }
 
 impl Story {
@@ -39,10 +40,12 @@ impl Display for Story {
         )?;
 
         if let Some(url) = &self.url {
-            write!(f, "   {url}")
+            writeln!(f, "   {url}")?;
         } else {
-            write!(f, "   (no URL)")
+            writeln!(f, "   (no URL)")?;
         }
+
+        writeln!(f, "   {} comments", self.descendants)
     }
 }
 
