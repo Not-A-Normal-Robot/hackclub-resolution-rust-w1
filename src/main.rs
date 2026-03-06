@@ -1,5 +1,6 @@
+use color_eyre::eyre::Result as EyreResult;
 use core::fmt::Display;
-
+use reqwest::blocking::Client;
 use serde::Deserialize;
 
 const TOP_STORIES_API: &str = "https://hacker-news.firebaseio.com/v0/topstories.json";
@@ -16,6 +17,15 @@ struct Story {
     url: Option<String>,
     score: u32,
     by: String,
+}
+
+impl Story {
+    fn fetch(client: &Client, id: u64) -> EyreResult<Self> {
+        let url = get_story_info_url(id);
+        let response = client.get(url).send()?;
+        let parsed: Self = response.json()?;
+        Ok(parsed)
+    }
 }
 
 impl Display for Story {
@@ -36,28 +46,25 @@ impl Display for Story {
     }
 }
 
-fn main() {
+fn get_top_ids(client: &Client) -> EyreResult<Vec<u64>> {
+    let response = client.get(TOP_STORIES_API).send()?;
+    let parsed: Vec<u64> = response.json()?;
+    Ok(parsed)
+}
+
+fn main() -> EyreResult<()> {
+    color_eyre::install()?;
+
     println!("🔶 Top 10 Hacker News Stories\n");
 
-    let client = reqwest::blocking::Client::new();
+    let client = Client::new();
+    let top_ids = get_top_ids(&client)?;
 
-    let top_ids: Vec<u64> = client
-        .get(TOP_STORIES_API)
-        .send()
-        .expect("Failed to fetch top stories")
-        .json()
-        .expect("Failed to parse story IDs");
-
-    for (i, id) in top_ids.iter().take(10).enumerate() {
-        let url = get_story_info_url(*id);
-
-        let story: Story = client
-            .get(&url)
-            .send()
-            .expect("Failed to fetch story")
-            .json()
-            .expect("Failed to parse story");
+    for (i, id) in top_ids.iter().take(10).copied().enumerate() {
+        let story = Story::fetch(&client, id)?;
 
         println!("{}. {story}", i + 1);
     }
+
+    Ok(())
 }
