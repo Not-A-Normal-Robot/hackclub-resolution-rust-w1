@@ -29,7 +29,7 @@ impl Display for Story {
         )?;
 
         if let Some(url) = &self.url {
-            write!(f, "   {url}\n")
+            write!(f, "   {url}")
         } else {
             write!(f, "   (no URL)")
         }
