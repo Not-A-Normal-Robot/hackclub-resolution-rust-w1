@@ -12,3 +12,8 @@ serde = { version = "1", features = ["derive"] }
 [lints.clippy]
 all = "deny"
 pedantic = "warn"
+
+[profile.release]
+opt-level = "z"
+lto = "fat"
+codegen-units = 1
