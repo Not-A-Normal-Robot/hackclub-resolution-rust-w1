@@ -17,7 +17,7 @@ struct Story {
     url: Option<String>,
     score: u64,
     by: String,
-    descendants: u64,
+    descendants: Option<u64>,
 }
 
 impl Story {
@@ -45,29 +45,31 @@ impl Display for Story {
             writeln!(f, "   (no URL)")?;
         }
 
-        writeln!(f, "   {} comments", self.descendants)
-    }
-}
-
-fn get_top_ids(client: &Client) -> EyreResult<Vec<u64>> {
-    let response = client.get(TOP_STORIES_API).send()?;
-    let parsed: Vec<u64> = response.json()?;
-    Ok(parsed)
-}
-
-fn main() -> EyreResult<()> {
-    color_eyre::install()?;
-
-    println!("🔶 Top 10 Hacker News Stories\n");
-
-    let client = Client::new();
-    let top_ids = get_top_ids(&client)?;
-
-    for (i, id) in top_ids.iter().take(10).copied().enumerate() {
-        let story = Story::fetch(&client, id)?;
-
-        println!("{}. {story}", i + 1);
+        if let Some(descendants) = self.descendants {
+            writeln!(f, "   {descendants}")?;
+        }
+        Ok(())
     }
 
-    Ok(())
-}
+    fn get_top_ids(client: &Client) -> EyreResult<Vec<u64>> {
+        let response = client.get(TOP_STORIES_API).send()?;
+        let parsed: Vec<u64> = response.json()?;
+        Ok(parsed)
+    }
+
+    fn main() -> EyreResult<()> {
+        color_eyre::install()?;
+
+        println!("🔶 Top 10 Hacker News Stories\n");
+
+        let client = Client::new();
+        let top_ids = get_top_ids(&client)?;
+
+        for (i, id) in top_ids.iter().take(10).copied().enumerate() {
+            let story = Story::fetch(&client, id)?;
+
+            println!("{}. {story}", i + 1);
+        }
+
+        Ok(())
+    }
