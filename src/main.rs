@@ -50,26 +50,27 @@ impl Display for Story {
         }
         Ok(())
     }
+}
 
-    fn get_top_ids(client: &Client) -> EyreResult<Vec<u64>> {
-        let response = client.get(TOP_STORIES_API).send()?;
-        let parsed: Vec<u64> = response.json()?;
-        Ok(parsed)
+fn get_top_ids(client: &Client) -> EyreResult<Vec<u64>> {
+    let response = client.get(TOP_STORIES_API).send()?;
+    let parsed: Vec<u64> = response.json()?;
+    Ok(parsed)
+}
+
+fn main() -> EyreResult<()> {
+    color_eyre::install()?;
+
+    println!("🔶 Top 10 Hacker News Stories\n");
+
+    let client = Client::new();
+    let top_ids = get_top_ids(&client)?;
+
+    for (i, id) in top_ids.iter().take(10).copied().enumerate() {
+        let story = Story::fetch(&client, id)?;
+
+        println!("{}. {story}", i + 1);
     }
 
-    fn main() -> EyreResult<()> {
-        color_eyre::install()?;
-
-        println!("🔶 Top 10 Hacker News Stories\n");
-
-        let client = Client::new();
-        let top_ids = get_top_ids(&client)?;
-
-        for (i, id) in top_ids.iter().take(10).copied().enumerate() {
-            let story = Story::fetch(&client, id)?;
-
-            println!("{}. {story}", i + 1);
-        }
-
-        Ok(())
-    }
+    Ok(())
+}
